@@ -1,0 +1,29 @@
+name: Build Unsigned iOS IPA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build unsigned iOS app
+        run: |
+          cd ios/PhoneBox
+          xcodebuild -scheme PhoneBox -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" CONFIGURATION_BUILD_DIR=build
+
+      - name: Package IPA
+        run: |
+          cd ios/PhoneBox/build
+          mkdir -p Payload
+          cp -r PhoneBox.app Payload/
+          zip -r PhoneBox.ipa Payload
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PhoneBox-iOS
+          path: ios/PhoneBox/build/PhoneBox.ipa
