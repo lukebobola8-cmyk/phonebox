@@ -37,7 +37,7 @@ public sealed partial class SystemMonitor(ILogger<SystemMonitor> log, ConfigStor
     private volatile IReadOnlyList<GpuInfo>? _nvidia, _lhmGpus, _osGpus;
     private double? _cpuTemp;
     private double? _cpuPower; // package watts: LibreHardwareMonitor on Windows, RAPL on Linux; none on macOS
-    private double? _appleGpuTemp; // macOS: the GPU's temperature from the SMC, added to the ioreg GPU
+    private double? _appleGpuTemp = null; // macOS: the GPU's temperature from the SMC (stays null on Windows), added to the ioreg GPU
     private IReadOnlyList<DiskInfo> _disks = [];
     // counts samples, so the panel can tell a new one from the same one sent again (with a media or volume change)
     private long _seq;

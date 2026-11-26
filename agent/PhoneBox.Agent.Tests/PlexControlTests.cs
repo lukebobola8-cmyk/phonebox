@@ -311,12 +311,12 @@ public sealed class PlexControlTests
         using var fixture = new Fixture();
         using var plex = fixture.Create();
         await Task.WhenAll(Enumerable.Range(0, 8).Select(_ => plex.Snapshot(default)));
-        Assert.Single(fixture.ToPlayer.Where(c => c.Uri.AbsolutePath == "/player/timeline/poll"));
+        Assert.Single(fixture.ToPlayer, c => c.Uri.AbsolutePath == "/player/timeline/poll");
         fixture.Clock += 4_000; await plex.Snapshot(default);
-        Assert.Single(fixture.ToPlayer.Where(c => c.Uri.AbsolutePath == "/player/timeline/poll"));
+        Assert.Single(fixture.ToPlayer, c => c.Uri.AbsolutePath == "/player/timeline/poll");
         fixture.Clock += 2_000; await plex.Snapshot(default);
         Assert.Equal(2, fixture.ToPlayer.Count(c => c.Uri.AbsolutePath == "/player/timeline/poll"));
-        Assert.Single(fixture.ToServer.Where(c => c.Uri.AbsolutePath == "/identity")); // cached per server address
+        Assert.Single(fixture.ToServer, c => c.Uri.AbsolutePath == "/identity"); // cached per server address
     }
 
     [Fact]
@@ -893,7 +893,7 @@ public sealed class PlexControlTests
             () => 1_000_000, null, null, null, null, plex);
         var result = await deck.Act("action", "pl1", null, null, null, null, default);
         Assert.True(result.Ok, result.Error);
-        Assert.Single(fixture.ToPlayer.Where(c => c.Uri.AbsolutePath == "/player/playback/playMedia"));
+        Assert.Single(fixture.ToPlayer, c => c.Uri.AbsolutePath == "/player/playback/playMedia");
     }
 
     [Fact]

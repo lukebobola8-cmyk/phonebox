@@ -101,7 +101,7 @@ public sealed class ShortcutCycleTests : IDisposable
     }
 
     [Fact]
-    public void TwoTapsAtOnceRunTwoDifferentKeys()
+    public async Task TwoTapsAtOnceRunTwoDifferentKeys()
     {
         var id = Id();
         // the first key is held until the second tap has run, so the second tap arrives while the first still runs
@@ -112,14 +112,14 @@ public sealed class ShortcutCycleTests : IDisposable
         Started("slow");
         Assert.Null(Shortcuts.Run(cfg, id, NullLogger.Instance));
         Release("slow");
-        Assert.Null(first.Result);
+        Assert.Null(await first);
         Assert.True(On(slow));
         Assert.True(On(fast));   // the second tap ran the second key, not the slow one again
         Assert.Equal(slow.Id, Shortcuts.CycleStates(cfg)![id]); // the one that finished last is the one shown
     }
 
     [Fact]
-    public void AKeyThatIsStillRunningOrFailedIsNotReportedAsTheOneThatRan()
+    public async Task AKeyThatIsStillRunningOrFailedIsNotReportedAsTheOneThatRan()
     {
         var id = Id();
         var slow = new Shortcut { Id = id + "slow", Label = "slow", Cmd = "builtin:macro", Steps = ["keys:hold:slow", "keys:not_a_key"] };
@@ -129,12 +129,12 @@ public sealed class ShortcutCycleTests : IDisposable
         Started("slow");
         Assert.Null(Shortcuts.CycleStates(cfg)); // claimed, but not run yet: the face does not change
         Release("slow");
-        FailedOnTheBadKey(tap.Result);           // and it failed
+        FailedOnTheBadKey(await tap);           // and it failed
         Assert.Null(Shortcuts.CycleStates(cfg)); // so it never counts
     }
 
     [Fact]
-    public void WhenTwoOverlappingTapsBothFailTheNextTapRetriesTheEarlierKey()
+    public async Task WhenTwoOverlappingTapsBothFailTheNextTapRetriesTheEarlierKey()
     {
         var id = Id();
         Shortcut a = new() { Id = id + "a", Label = "a", Toggle = true, Cmd = "builtin:macro", Steps = ["keys:hold:a", "keys:not_a_key"] };
@@ -146,9 +146,9 @@ public sealed class ShortcutCycleTests : IDisposable
         var second = Tap(cfg, id);
         Started("b");                                          // the second claimed b while a still ran
         Release("a");
-        FailedOnTheBadKey(first.Result);                       // a failed first
+        FailedOnTheBadKey(await first);                       // a failed first
         Release("b");
-        FailedOnTheBadKey(second.Result);
+        FailedOnTheBadKey(await second);
         a.Steps = ["wait:1"]; b.Steps = ["wait:1"];           // both work now
         Assert.Null(Shortcuts.Run(cfg, id, NullLogger.Instance));
         Assert.True(On(a));                                    // it was a that failed first: it is tried again
@@ -156,7 +156,7 @@ public sealed class ShortcutCycleTests : IDisposable
     }
 
     [Fact]
-    public void AnOldFailureDoesNotUndoANewerClaimAfterAFullWrap()
+    public async Task AnOldFailureDoesNotUndoANewerClaimAfterAFullWrap()
     {
         var id = Id();
         Shortcut slowBad = new() { Id = id + "a", Label = "a", Cmd = "builtin:macro", Steps = ["keys:hold:a", "keys:not_a_key"] };
@@ -168,7 +168,7 @@ public sealed class ShortcutCycleTests : IDisposable
         Assert.Null(Shortcuts.Run(cfg, id, NullLogger.Instance));                 // b
         Assert.Null(Shortcuts.Run(cfg, id, NullLogger.Instance));                 // c
         Release("a");
-        FailedOnTheBadKey(first.Result);                                          // a failed: it is next, once
+        FailedOnTheBadKey(await first);                                          // a failed: it is next, once
         Assert.NotNull(Shortcuts.Run(cfg, id, NullLogger.Instance));              // a again (it fails the same way, but it is the one tried)
         Assert.Equal(c.Id, Shortcuts.CycleStates(cfg)![id]);
     }

@@ -193,10 +193,10 @@ public sealed class OpenCodeSessionsTests : IDisposable
     [InlineData("Always allow test", "Always allow test", "Always allow test")]
     [InlineData("   Padded title   ", "Padded title", "Padded title")]   // surrounding whitespace goes, the words stay human
     [InlineData("   ", null, "ses_a")]                                   // no title: the short id is the name
-    public void TitlesAreTrimmedAndKeptHuman(string? title, string? expectedTitle, string expectedName)
+    public async Task TitlesAreTrimmedAndKeptHuman(string? title, string? expectedTitle, string expectedName)
     {
         _fake.SessionsJson = """{"data":[""" + Session("ses_a", "/home/haruki/w", title ?? "", _now - 60_000) + """]}""";
-        var s = Assert.Single(Read().Result);
+        var s = Assert.Single(await Read());
         Assert.Equal(expectedTitle, s.Title);
         Assert.Equal(expectedName, s.Name);
     }
